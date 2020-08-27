@@ -19,15 +19,6 @@ use Response;
 
 class DeviceController extends Controller
 {
-private $screenQty = 0;
-private $mouseQty = 0;
-private $keyboardQty = 0;
-private $caseQty = 0;
-private $phoneQty = 0;
-private $laptopQty = 0;
-private $chairQty = 0;
-private $tableQty = 0;
-private $hardDiskQty = 0;
 
     public function authLogin()
     {
@@ -54,9 +45,12 @@ private $hardDiskQty = 0;
         $this->authLogin();
 
         $user = Session::get('sUser');
-        $allDevices = DB::table('devices')
-            ->join('device_users', 'devices.id', '=', 'device_users.device_id')
-            ->where('user_id', $user->id)->where('status', '=', 2)->get();
+        $allDevices = DB::table('device_users')
+            ->join('devices', 'devices.id', '=', 'device_users.device_id')
+            ->where('user_id', $user->id)->where('status', '=', 2)
+            ->where(function ($query) {
+                $query->where('released_at', '0000-00-00')->orwhere('released_at', null);
+            })->get();
         return view('devices/screen09-my-devices')->with('allDevices', $allDevices)->with('user', $user);
     }
 
@@ -66,7 +60,9 @@ private $hardDiskQty = 0;
         if ($this->isAdmin()) {
             $allDevices = Device::all();
             $allUsers = UserModel::all();
-            $allRequests = RequestModel::all();
+            $allRequests = DB::table('requests')
+                ->leftJoin('users', 'users.id', '=', 'requests.user_id')
+                ->select('requests.*', 'users.last_name')->get();
             return view('devices.screen10-devices')->with('allDevices', $allDevices)->with('user', Session::get('sUser'))
                 ->with('allUsers', $allUsers)->with('allRequests', $allRequests);
         }
@@ -193,7 +189,7 @@ private $hardDiskQty = 0;
             $getDevice = Device::orderBy('id', 'desc')->first();
             return redirect('devices/' . $getDevice->id . '/edit')->with('user', Session::get('sUser'));
         }
-        return $this->showDevicesList();
+        return redirect('/devices/lists');
     }
 
     public function editDevice($deviceId)
@@ -308,8 +304,10 @@ private $hardDiskQty = 0;
             $allDevicesOfUsers = DB::table('device_users')
                 ->join('devices', 'devices.id', '=', 'device_users.device_id')
                 ->join('users', 'users.id', '=', 'device_users.user_id')
-                ->select('device_users.*', 'users.first_name', 'users.last_name', 'devices.category', 'devices.code', 'devices.name')
-                ->get();
+                ->join('requests', 'requests.id', '=', 'device_users.request_id')
+                ->select('device_users.*', 'users.first_name', 'users.last_name', 'users.email', 'devices.category',
+                    'devices.code', 'devices.name', 'requests.reason')
+                ->orderBy('id')->get();
             return view('devices.screen12-devices-of-users')->with('allDevicesOfUsers', $allDevicesOfUsers)
                 ->with('user', Session::get('sUser'));
         }
@@ -317,19 +315,107 @@ private $hardDiskQty = 0;
     }
 
     // Popup screen 10
-    public function assignToUser(Request $request)
+    public function assignToUser(Request $request, $deviceId)
     {
-        $data = $request->all();
-        echo '<pre>';
-        echo print_r($data);
-        echo '</pre>';
+        $this->authLogin();
+        if ($this->isAdmin()) {
+            $device = Device::find($deviceId);
+            $data = $request->all();
+
+            if ($request->handoverOrReleased == 1) {
+                if ($device->status != 1) {
+                    echo '<script>alert("Thiết bị hiện không có sẵn!!!")</script>';
+                } else {
+                    $deviceUser = new DeviceUser();
+                    $deviceUser->handover_at = $data['handoverDay'];
+                    $deviceUser->device_id = $deviceId;
+                    $deviceUser->user_id = $data['handoverUser'];
+                    $deviceUser->request_id = $data['handoverRequest'];
+                    $deviceUser->save();
+                    $device->status = 2;
+                    $device->save();
+                    $requestOfDevice = RequestModel::find($data['handoverRequest']);
+                    if (isset($requestOfDevice)) {
+                        $requestOfDevice->status = 2;
+                        $requestOfDevice->approved_at = date('Y-m-d');
+                        $requestOfDevice->leader_id = Session::get('sUser')->id;
+                        $requestOfDevice->save();
+                    }
+                }
+            } elseif ($request->handoverOrReleased == 2) {
+                if ($device->status != 2) {
+                    echo '<script>alert("Thiết bị hiện đang không có ai sử dụng!!!")</script>';
+                } else {
+                    $deviceUser = DeviceUser::where('device_id', $device->id)->where(function ($query) {
+                        $query->where('released_at', '0000-00-00')->orwhere('released_at', null);
+                    })->first();
+                    if (!$deviceUser) {
+                        echo '<script>alert("Thiết bị hiện đang không có ai sử dụng hoặc đã được thu hồi!!!")</script>';
+                    } else {
+                        $deviceUser->released_at = $data['releasedDay'];
+                        $deviceUser->save();
+                        $device->status = 1;
+                        $device->save();
+                        $requestOfUser = RequestModel::find($deviceUser->request_id);
+                        if(isset($requestOfUser)) {
+                            $requestOfUser->status = 4;
+                            $requestOfUser->save();
+                        }
+                    }
+                }
+            }
+            return redirect('/devices/lists');
+        } else return redirect('me')->with('user', Session::get('sUser'));
+    }
+
+    public function showHistory($deviceId)
+    {
+        $this->authLogin();
+        if ($this->isAdmin()) {
+            $deviceUser = DB::table('device_users')
+                ->join('users', 'users.id', '=', 'device_users.user_id')
+                ->where('device_id', $deviceId)->get();
+            foreach ($deviceUser as $key => $value) {
+                if ($value->released_at == null || $value->released_at == '0000-00-00') {
+                    $value->released_at = '';
+                }
+            }
+            return response()->json($deviceUser);
+        }
         return redirect('me')->with('user', Session::get('sUser'));
     }
 
-    public function showHistory(Request $request, $deviceUserId)
+    // Popup screen 12
+    public function releasedDevice(Request $request, $deviceId)
     {
-        $deviceUser = DeviceUser::find($deviceUserId);
-        return response()->json($deviceUser);
-    }
+        $this->authLogin();
+        if ($this->isAdmin()) {
+            $device = Device::find($deviceId);
+            $data = $request->all();
 
+            if ($request->handoverOrReleased == 2) {
+                if ($device->status != 2) {
+                    echo '<script>alert("Thiết bị hiện đang không có ai sử dụng!!!")</script>';
+                } else {
+                    $deviceUser = DeviceUser::where('device_id', $device->id)->where(function ($query) {
+                        $query->where('released_at', '0000-00-00')->orwhere('released_at', null);
+                    })->first();
+                    if (!$deviceUser) {
+                        echo '<script>alert("Thiết bị hiện đang không có ai sử dụng hoặc đã được thu hồi!!!")</script>';
+                    } else {
+                        $deviceUser->released_at = $data['releasedDay'];
+                        $deviceUser->save();
+                        $device->status = 1;
+                        $device->save();
+                        $requestOfUser = RequestModel::find($deviceUser->request_id);
+                        if(isset($requestOfUser)) {
+                            $requestOfUser->status = 4;
+                            $requestOfUser->save();
+                        }
+                    }
+                }
+            }
+            return redirect('/devices/lists/users');
+        } else return redirect('me')->with('user', Session::get('sUser'));
+    }
 }

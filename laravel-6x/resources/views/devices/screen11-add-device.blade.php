@@ -2,15 +2,9 @@
 @section('content')
 
     <h1>Screen 11</h1>
-    <form role="form" method="post" id="editDeviceForm" action="
-        @if(isset($editDevice))
-            {{url('devices/' . $editDevice->id . '/update/')}}
-        @else
-            {{url('devices/save')}}
-        @endif
-        " enctype="multipart/form-data" onsubmit="return false">
+    <form role="form" method="post" id="editDeviceForm" action="@if(isset($editDevice)){{url('devices/' . $editDevice->id . '/update/')}}
+        @else{{url('devices/save')}}@endif" enctype="multipart/form-data">
         {{csrf_field()}}
-
         <div class="card-body">
             <div class="form-group" id="formHeader">
                 <label>

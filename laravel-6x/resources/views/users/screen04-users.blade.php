@@ -1,14 +1,3 @@
-
-{{--@if (count($errors) >0)--}}
-{{--    <ul>--}}
-{{--        @foreach($errors->all() as $error)--}}
-{{--            <li class="text-danger"> {{ $error }}</li>--}}
-{{--        @endforeach--}}
-{{--    </ul>--}}
-{{--@endif--}}
-{{--<form action="{{url('login-confirm-password')}}" method="post">--}}
-{{--    @csrf--}}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,10 +31,10 @@
     <ul class="menu">
         <li class="menu"><a href="{{url('/me')}}" ><img src="{{url('public/frontend/images/KIAI_logo.PNG')}}" alt="Logo"></a></li>
         <li class="menu text"><a href="{{url('/devices/me')}}">Thiết bị của tôi</a></li>
-        <li class="menu text"><a href="#">Yêu cầu của tôi</a></li>
+        <li class="menu text"><a href="{{url('/requests/me')}}">Yêu cầu của tôi</a></li>
         <li class="menu text"><a href="{{url('/devices/lists')}}">Danh sách thiết bị</a></li>
         <li class="menu text"><a href="{{url('/devices/lists/users')}}">Danh sách thiết bị của nhân viên</a></li>
-        <li class="menu text"><a href="#">Danh sách yêu cầu</a></li>
+        <li class="menu text"><a href="{{url('/requests/lists')}}">Danh sách yêu cầu</a></li>
         <li class="menu text"><a href="{{url('/users/lists/')}}">Danh sách user</a></li>
         <li class="menu avatar"><img src="{{url('public/frontend/images/avatars/' . Session::get('sUser')->avatar)}}" alt="avatar" id="avatar"></li>
         <li class="menu text name">

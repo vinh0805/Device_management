@@ -2,6 +2,7 @@ body {
 
 }
 
+/* Login */
 button#loginButton {
     opacity: 0.9;
 }
@@ -13,7 +14,7 @@ span#loginError {
     margin-top: 5px;
 }
 
-
+/* Menu */
 ul.menu{
     text-align: center;
     height: 70px;
@@ -65,6 +66,7 @@ li.menu a:hover {
     margin-top: 5px;
 }
 
+ /*Show profile */
 #datepicker {
     background-color: white;
 }
@@ -88,6 +90,7 @@ li.menu a:hover {
     text-align: center;
 }
 
+ /*Screen 3->9 */
 button.btn.btn-primary#submitButton {
     width: 120px;
     margin: 30px 0 0 15px;
@@ -204,3 +207,64 @@ input.radioRole {
 /*#assignFormTopics[hidden], #assignFormTopics2[hidden] {*/
 /*    display: none;*/
 /*}*/
+
+/* Screen 10: showHistory Popup */
+td.showHistoryName{
+    height: 20px;
+    padding: 5px 5px 0 12px;
+    border-bottom: none;
+}
+p.showHistoryEmail{
+    height: 20px;
+    padding: 0 5px 5px 12px;
+    border-top: none;
+    color: dodgerblue;
+    font-style: italic;
+}
+
+/* Screen 12: show request Popup */
+div.form-group.showRequestInfoModalContent2 {
+    padding: 5px 5px 20px 5px;
+    border: 1px solid black;
+    border-radius: 4px;
+}
+td.showUserName{
+    height: 20px;
+    padding: 5px 5px 0 12px;
+    border-bottom: none;
+}
+p.showUserEmail{
+    height: 20px;
+    margin: 0;
+    border-top: none;
+    color: dodgerblue;
+    font-style: italic;
+}
+
+/*Screen 13: show request info Popup*/
+div.show-request-info-row {
+    width: 200px;
+    display: inline-block;
+}
+div.modal-body div label.show-request-info-row2 {
+    font-weight: normal;
+}
+
+/*Screen 13+14: change color by status*/
+label.newStatus {
+    color: #00aa00;
+}
+label.approvedStatus {
+    color: #5d36a4;
+}
+label.rejectedStatus {
+    color: red;
+}
+label.completedStatus {
+    color: darkgray;
+}
+
+/*Screen 15: add edit request*/
+textarea#reasonOfRequest {
+    padding: 5px 10px 5px 10px;
+}

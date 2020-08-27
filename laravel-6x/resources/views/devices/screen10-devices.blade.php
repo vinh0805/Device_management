@@ -1,14 +1,4 @@
-
-{{--@if (count($errors) >0)--}}
-{{--    <ul>--}}
-{{--        @foreach($errors->all() as $error)--}}
-{{--            <li class="text-danger"> {{ $error }}</li>--}}
-{{--        @endforeach--}}
-{{--    </ul>--}}
-{{--@endif--}}
-{{--<form action="{{url('login-confirm-password')}}" method="post">--}}
-{{--    @csrf--}}
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -33,18 +23,18 @@
     <link rel="stylesheet" href="{{asset('public/frontend/css/jquery-ui.css')}}">
     <link rel="stylesheet" href="{{asset('public/backend/js/jquery-validation-1.19.2/demo/css/screen.css')}}">
     <link rel="stylesheet" href="{{asset('public/frontend/css/stylesheet.css')}}">
-
 </head>
+
 <body class="hold-transition login-page">
 <section class="menu-top" id="header">
     {{--    Menu--}}
     <ul class="menu">
         <li class="menu"><a href="{{url('/me')}}" ><img src="{{url('public/frontend/images/KIAI_logo.PNG')}}" alt="Logo"></a></li>
         <li class="menu text"><a href="{{url('/devices/me')}}">Thiết bị của tôi</a></li>
-        <li class="menu text"><a href="#">Yêu cầu của tôi</a></li>
+        <li class="menu text"><a href="{{url('/requests/me')}}">Yêu cầu của tôi</a></li>
         <li class="menu text"><a href="{{url('/devices/lists')}}">Danh sách thiết bị</a></li>
         <li class="menu text"><a href="{{url('/devices/lists/users')}}">Danh sách thiết bị của nhân viên</a></li>
-        <li class="menu text"><a href="#">Danh sách yêu cầu</a></li>
+        <li class="menu text"><a href="{{url('/requests/lists')}}">Danh sách yêu cầu</a></li>
         <li class="menu text"><a href="{{url('/users/lists/')}}">Danh sách user</a></li>
         <li class="menu avatar"><img src="{{url('public/frontend/images/avatars/' . Session::get('sUser')->avatar)}}" alt="avatar" id="avatar"></li>
         <li class="menu text name">
@@ -148,7 +138,6 @@
         <!-- /.content -->
     </div>
     <!-- ./wrapper -->
-
 </section>
 
 <section>
@@ -162,7 +151,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form role="form" id="assignForm">
+                    <form role="form" id="assignForm" method="post">
                         {{csrf_field()}}
                         <div class="form-group">
                             <label for="handover"><input type="radio" name="handoverOrReleased" id="handover" value="1"></label>
@@ -170,25 +159,28 @@
                             <label for="released"><input type="radio" class="radioGender" name="handoverOrReleased" id="released" value="2"></label>
                             <label class="radioLabel">Thu hồi</label>
                         </div>
-                        <p>
                         <fieldset id="assignFormTopics">
                             <div class="form-group">
                                 <label for="Birthday" class="col-form-label">Ngày bàn giao:</label>
-                                <input type="date" class="form-control" id="handoverDay" name="handoverDay">
+                                <label for="handoverDay"></label><input type="date" class="form-control" id="handoverDay" name="handoverDay">
                             </div>
                             <div class="form-group">
                                 <label for="Name" class="col-form-label">Bạn muốn bàn giao thiết bị cho:</label>
-                                <select class="form-control" id="handoverUser" name="handoverUser">
+                                <label for="handoverUser"></label><select class="form-control" id="handoverUser" name="handoverUser">
                                     @foreach($allUsers as $key => $user)
-                                        <option value="{{$user->last_name}}">{{$user->last_name}}</option>
+                                        <option value="{{$user->id}}">{{$user->last_name}}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="Name" class="col-form-label">Thiết bị mua bởi yêu cầu:</label>
-                                <select class="form-control" id="handoverRequest" name="handoverRequest">
+                                <label for="handoverRequest"></label><select class="form-control" id="handoverRequest" name="handoverRequest">
                                     @foreach($allRequests as $key => $request)
-                                        <option value="{{$request->id}}">{{$request->id}}</option>
+                                        @if($request->status == 1)
+                                            <option value="{{$request->id}}">
+                                                {{$request->id}} - {{$request->last_name}}: {{$request->reason}}
+                                            </option>
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -196,11 +188,9 @@
                         <fieldset id="assignFormTopics2">
                             <div class="form-group">
                                 <label for="Birthday" class="col-form-label">Ngày thu hồi:</label>
-                                <input type="date" class="form-control" id="releasedDay" name="releasedDay">
+                                <label for="releasedDay"></label><input type="date" class="form-control" id="releasedDay" name="releasedDay">
                             </div>
                         </fieldset>
-
-                        </p>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
                             <button type="Submit" class="btn btn-primary" id="submitPopup1Button">Lưu</button>
@@ -221,42 +211,32 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form role="form" id="assignForm">
+                    <form role="form" id="showHistoryForm">
                         {{csrf_field()}}
                         <!-- Main content -->
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="card">
-                                        <!-- /.card-header -->
-                                        <div class="card-body">
-                                            <table id="example1" class="table table-bordered table-striped">
-                                                <thead>
-                                                <tr>
-                                                    <th>Tên nhân viên</th>
-                                                    <th>Ngày bàn giao</th>
-                                                    <th>Ngày thu hồi</th>
-                                                </tr>
-                                                </thead>
-                                                <thead id="showHistoryModalContent">
-
-                                                </thead>
-{{--                                                @foreach($allDevices  as $key => $device)--}}
-{{--                                                    <tr>--}}
-{{--                                                        <td id="showHistoryModalUserName"></td>--}}
-{{--                                                        <td id="showHistoryModalHandoverAt"></td>--}}
-{{--                                                        <td id="showHistoryModalReleasedAt"></td>--}}
-{{--                                                    </tr>--}}
-{{--                                                @endforeach--}}
-                                            </table>
-                                        </div>
-                                        <!-- /.card-body -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <!-- /.card-header -->
+                                    <div class="card-body">
+                                        <table id="example2" class="table table-bordered table-striped">
+                                            <thead>
+                                            <tr>
+                                                <th>Tên nhân viên</th>
+                                                <th>Ngày bàn giao</th>
+                                                <th>Ngày thu hồi</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="showHistoryModalContent"></tbody>
+                                        </table>
                                     </div>
-                                    <!-- /.card -->
+                                    <!-- /.card-body -->
                                 </div>
-                                <!-- /.col -->
+                                <!-- /.card -->
                             </div>
-
-                            <div class="modal-footer">
+                            <!-- /.col -->
+                        </div>
+                        <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
                         </div>
                     </form>
@@ -264,9 +244,7 @@
             </div>
         </div>
     </div>
-
 </section>
-
 
 <!-- jQuery -->
 <script src="{{asset('public/frontend/css/plugins/jquery/jquery.min.js')}}"></script>
@@ -292,8 +270,8 @@
             "paging": true,
             "lengthChange": false,
             "searching": false,
-            "ordering": true,
-            "info": true,
+            "ordering": false,
+            "info": false,
             "autoWidth": false,
             "responsive": true,
         });
@@ -303,90 +281,41 @@
 <script type="text/javascript">
     // Assign
     $('.assign-modal-click').click(function () {
-        // $id = $(this).atrr('id');
-        // $.post('devices/lists/get-device-info/', {id:$id}, function (data) {
-        // })
         $('#assignModal').modal('show');
         $('#popup1Title').text($(this).data('id') + ': ' + $(this).data('title'));
+        $('#assignForm').attr('action', '{{url('/devices/lists/assign/')}}' + '/' + $(this).data('id'));
     })
-
-    // $('submitPopup1Button').click(function () {
-    //     $.ajax({
-    //         type : 'POST',
-    //         url : '/devices/lists/assign/' + $(this).data('id'),
-    //         data: {
-    //             '_token': $('input[name=_token]').val(),
-    //             'id': $("#fid").val(),
-    //             'title': $('#t').val(),
-    //             'body': $('#b').val()
-    //         },
-    //         success: function(data) {
-    //             $('.post' + data.id).replaceWith(" "+
-    //                 "<tr class='post" + data.id + "'>"+
-    //                 "<td>" + data.id + "</td>"+
-    //                 "<td>" + data.title + "</td>"+
-    //                 "<td>" + data.body + "</td>"+
-    //                 "<td>" + data.created_at + "</td>"+
-    //                 "<td><button class='show-modal btn btn-info btn-sm' data-id='" + data.id + "' data-title='" + data.title + "' data-body='" + data.body + "'><span class='fa fa-eye'></span></button> <button class='edit-modal btn btn-warning btn-sm' data-id='" + data.id + "' data-title='" + data.title + "' data-body='" + data.body + "'><span class='glyphicon glyphicon-pencil'></span></button> <button class='delete-modal btn btn-danger btn-sm' data-id='" + data.id + "' data-title='" + data.title + "' data-body='" + data.body + "'><span class='glyphicon glyphicon-trash'></span></button></td>"+
-    //                 "</tr>");
-    //         }
-    //     });
-    //     $('#assignModal').modal('hide');
-    // });
 
     // Show history
     $('.history-modal-click').click(function () {
         $('#showHistoryModal').modal('show');
         $('#popup2Title').text('Lịch sử bàn giao thiết bị ' + $(this).data('id') + ': ' + $(this).data('title'));
         $.ajax({
-            type : 'POST',
-            url : '/devices/lists/showHistory/' + $(this).data('id'),
-            data : {
+            type : 'get',
+            url : 'lists/show-history/' + $(this).data('id'),
+            dataType : 'json',
 
+            success: function (response) {
+                $('#showHistoryModalContent').replaceWith('<tbody id="showHistoryModalContent">');
+                for (let i = 0; i < response.length; i++) {
+                    $('#showHistoryModalContent').append(
+                        "<tr>\n" +
+                        "    <td class='showUserName'>" +
+                        "         <b>" + response[i]["first_name"] + " " + response[i]["last_name"] + "</b>" +
+                        "         <p class='showUserEmail'>" + response[i]["email"] + "</p>" +
+                        "    </td>\n" +
+                        "    <td>" + response[i]["handover_at"] + "</td>\n" +
+                        "    <td>" + response[i]["released_at"] + "</td>\n" +
+                        "</tr>\n"
+                    )
+                }
+                $('#showHistoryModalContent').append('</tbody>');
             }
         })
     });
-
-    // $('#saveButton').click(function() {
-    //     $.ajax({
-    //         type : 'POST',
-    //         url : 'addPost',
-    //         data : {
-    //             '_token' : $('input[name=_token]').val(),
-    //             'title' : $('input[name=title]').val(),
-    //             'body' : $('input[name=body]').val()
-    //         },
-    //         success: function (data) {
-    //             if (data.errors) {
-    //                 $('.error').removeClass('hidden');
-    //                 $('.error').text(data.errors.title);
-    //                 $('.error').text(data.errors.body);
-    //             } else {
-    //                 $('.error').remove();
-    //                 $('#table').append("<tr class='post" + data.id + "'>"+
-    //                     "<td>" + data.id + "</td>"+
-    //                     "<td>" + data.title + "</td>"+
-    //                     "<td>" + data.body + "</td>"+
-    //                     "<td>" + data.created_at + "</td>"+
-    //                     "<td><a class='show-modal btn btn-info btn-sm' data-id='" + data.id + "' data-title='" + data.title +
-    //                         "' data-body='" + data.body + "'>"+
-    //                     "<i class='fa fa-eye'></i></a>"+
-    //                     "<a class='edit-modal btn btn-warning btn-sm' data-id='" + data.id + "' data-title='" + data.title +
-    //                         "' data-body='" + data.body + "'>"+
-    //                     "<i class='glyphicon glyphicon-pencil'></i></a>"+
-    //                     "<td><a class='delete-modal btn btn-danger btn-sm' data-id='" + data.id + "' data-title='" + data.title +
-    //                         "' data-body='" + data.body + "'>"+
-    //                     "<i class='glyphicon glyphicon-trash'></i></a>"+
-    //                     "<td>"+
-    //                     "<tr>"
-    //                 );
-    //             }
-    //         }
-    //     });
-    //     $('#title').val('');
-    //     $('#body').val('');
-    // })
 </script>
+
+{{--Validate data when assign--}}
 <script src="{{asset('public/backend/js/jquery-validation-1.19.2/dist/jquery.validate.js')}}"></script>
 <script type="text/javascript">
     $().ready(function () {
@@ -444,10 +373,7 @@
             else $("#assignFormTopics2").attr("style", "visibility: visible");
         });
     });
-
 </script>
 
 </body>
 </html>
-
-{{--</form>--}}

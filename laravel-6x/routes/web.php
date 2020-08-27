@@ -45,7 +45,8 @@ Route::get('/devices/me', 'DeviceController@showMyDevicesList');
 Route::get('/devices/lists', 'DeviceController@showDevicesList');
 Route::get('/devices/{deviceId}/delete', 'DeviceController@deleteDevice');
 Route::post('/devices/lists/assign/{deviceId}', 'DeviceController@assignToUser');
-Route::post('/devices/lists/showHistory/{deviceId}', 'DeviceController@assignToUser');
+Route::post('/devices/lists/released/{deviceId}', 'DeviceController@releasedDevice');
+Route::get('/devices/lists/show-history/{deviceId}', 'DeviceController@showHistory');
 
 Route::get('/devices/add', 'DeviceController@addDevice');
 Route::post('/devices/save', 'DeviceController@saveDevice');
@@ -59,20 +60,18 @@ Route::post('/devices/lists/get-device-info/{id}', 'DeviceController@updateDevic
 // Request
 Route::get('/requests/me', 'RequestController@showMyRequestsList');
 Route::get('/requests/lists', 'RequestController@showRequestsList');
-Route::get('/requests/{requestId}/delete', 'RequestController@deleteRequest');
+Route::get('/requests/me/{requestId}/delete', 'RequestController@deleteMyRequest');
+Route::post('/requests/{requestId}/approve', 'RequestController@approveRequest');
+Route::get('/requests/{requestId}/delete', 'RequestController@deleteUserRequest');
 Route::get('/requests/{requestId}/approve', 'RequestController@approveRequest');
 Route::get('/requests/{requestId}/reject', 'RequestController@rejectRequest');
+Route::get('/requests/me/show-request-info/{requestId}', 'RequestController@showRequestInfo');
 
 Route::get('/requests/add', 'RequestController@addRequest');
-Route::post('/requests/save', 'UserController@saveRequest');
+Route::post('/requests/save', 'RequestController@saveRequest');
 
 Route::get('/requests/{requestId}/edit', 'RequestController@editRequest');
-Route::post('/requests/{requestId}/update', 'UserController@updateRequest');
-
-Route::group(['middleware' => ['web']], function() {
-    Route::resource('post', 'PostController');
-    Route::POST('addPost', 'PostController@addPost');
-});
+Route::post('/requests/{requestId}/update', 'RequestController@updateRequest');
 
 
 
