@@ -26,7 +26,6 @@
 </head>
 
 <body class="hold-transition login-page">
-
 <section class="menu-top" id="header">
     {{--    Menu--}}
     <ul class="menu">
@@ -52,12 +51,9 @@
 </section>
 
 <section id="content">
-    <h1 style="text-align: center">Screen 12</h1>
+    <h1 style="text-align: center">Screen 13</h1>
     <div class="addUserButton">
-        <button class="btn btn-primary"><a href="{{url('/requests/lists')}}">D/s yêu cầu</a></button>
-    </div>
-    <div class="addUserButton">
-        <button class="btn btn-primary"><a href="{{url('/devices/lists')}}">D/s thiết bị</a></button>
+        <button class="btn btn-primary"><a href="{{url('/requests/add')}}">Thêm yêu cầu</a></button>
     </div>
     <div class="wrapper">
         <!-- Main content -->
@@ -70,66 +66,56 @@
                             <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Tên nhân viên</th>
-                                <th>Danh mục</th>
-                                <th>Mã sản phẩm</th>
-                                <th>Tên sản phẩm</th>
+                                <th>Lý do</th>
+                                <th>Ngày tạo</th>
+                                <th>Tình trạng</th>
+                                <th>Người xác nhận</th>
+                                <th>Ngày xác nhận</th>
+                                <th>Bàn giao</th>
                                 <th>Ngày bàn giao</th>
-                                <th>Ngày thu hồi</th>
-                                <th>Yêu cầu</th>
                                 <th>Action</th>
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach($allDevicesOfUsers as $key => $deviceOfUsers)
+                            @foreach($allMyRequests as $key => $myRequest)
                                 <tr>
-                                    <td>{{$deviceOfUsers->id}}</td>
-                                    <td class="showUserName"><b>{{$deviceOfUsers->first_name}} {{$deviceOfUsers->last_name}}</b>
-                                        <p class="showUserEmail">{{$deviceOfUsers->email}}</p></td>
+                                    <td>{{$myRequest->id}}</td>
+                                    <td>{{$myRequest->reason}}</td>
+                                    <td>{{date('Y-m-d', strtotime($myRequest->created_at))}}</td>
                                     <td>
-                                        @switch($deviceOfUsers->category)
-                                            @case(1)Screen
+                                        @switch($myRequest->status)
+                                            @case(1)<label class="newStatus">New</label>
                                             @break
-                                            @case(2)Mouse
+                                            @case(2)<label class="approvedStatus">Approved</label>
                                             @break
-                                            @case(3)Keyboard
+                                            @case(3)<label class="rejectedStatus">Rejected</label>
                                             @break
-                                            @case(4)Case
+                                            @case(4)<label class="completedStatus">Completed</label>
                                             @break
-                                            @case(5)Phone
-                                            @break
-                                            @case(6)Laptop
-                                            @break
-                                            @case(7)Chair
-                                            @break
-                                            @case(8)Table
-                                            @break
-                                            @case(9)Hard disk
                                             @default
                                         @endswitch
                                     </td>
-                                    <td>{{$deviceOfUsers->code}}</td>
-                                    <td>{{$deviceOfUsers->name}}</td>
-                                    <td>{{$deviceOfUsers->handover_at}}</td>
+                                    <td class="showUserName"><b>{{$myRequest->first_name}} {{$myRequest->last_name}}</b>
+                                        <p class="showUserEmail">{{$myRequest->email}}</p></td>
+                                    <td>@if(isset($myRequest->approved_at))
+                                            {{date('Y-m-d', strtotime($myRequest->approved_at))}}@endif</td>
                                     <td>
-                                        @if($deviceOfUsers->released_at != null && $deviceOfUsers->released_at != '0000-00-00')
-                                            {{$deviceOfUsers->released_at}}
+                                        @if($myRequest->status == 4 || $myRequest->status == 2)
+                                            <a href="#" class="request-info-modal-click" data-id="{{$myRequest->id}}">#{{$myRequest->id}}</a>
                                         @endif
                                     </td>
                                     <td>
-                                        @if($deviceOfUsers->released_at != null && $deviceOfUsers->released_at != '0000-00-00')
-                                            <a href="#" class="request-modal-click" data-id="{{$deviceOfUsers->request_id}}"
-                                               data-title="{{$deviceOfUsers->first_name}} {{$deviceOfUsers->last_name}}"
-                                               data-content="{{$deviceOfUsers->reason}}">
-                                                #{{$deviceOfUsers->request_id}}
+                                        @if($myRequest->status == 4 || $myRequest->status == 2)
+                                            {{date('Y-m-d', strtotime($myRequest->handover_at))}}
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($myRequest->status == 1)
+                                            <a href="{{url('/requests/' . $myRequest->id . '/edit')}}">Sửa</a>
+                                            <a onclick="return confirm('Bạn có muốn xóa yêu cầu {{$myRequest->id}} không?')"
+                                               href="{{url('requests/me/' . $myRequest->id . '/delete')}}">
+                                                Xóa
                                             </a>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($deviceOfUsers->released_at == null || $deviceOfUsers->released_at == '0000-00-00')
-                                            <a href="#" class="released-modal-click" data-main="{{$deviceOfUsers->code}}"
-                                               data-title="{{$deviceOfUsers->first_name}} {{$deviceOfUsers->last_name}}"
-                                               data-content="{{$deviceOfUsers->name}}" data-id="{{$deviceOfUsers->device_id}}">Thu hồi</a>
                                         @endif
                                     </td>
                                 </tr>
@@ -150,7 +136,7 @@
 </section>
 
 <section>
-    <div class="modal fade" id="releasedModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="showRequestInfoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -160,38 +146,26 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form role="form" id="releasedForm" method="post">
-                        {{csrf_field()}}
-                        <div class="form-group" hidden>
-                            <label for="handover"><input name="handoverOrReleased" value="2"></label>
-                        </div>
-                        <fieldset id="assignFormTopics2">
-                            <div class="form-group">
-                                <label for="Birthday" class="col-form-label">Ngày thu hồi:</label>
-                                <label for="releasedDay"></label><input type="date" class="form-control" id="releasedDay" name="releasedDay">
-                            </div>
-                        </fieldset>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
-                            <button type="Submit" class="btn btn-primary" id="submitPopup1Button">Thay đổi</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="showRequestInfoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="popup2Title"></h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group showRequestInfoModalContent1"></div>
-                    <div class="form-group showRequestInfoModalContent2"></div>
+                    <div>
+                        <div class="show-request-info-row"><b>Danh mục:</b></div>
+                        <label id="RequestInfoModalCategory" class="show-request-info-row2"></label>
+                    </div>
+                    <div>
+                        <div class="show-request-info-row"><b>Mã sản phẩm:</b></div>
+                        <label id="RequestInfoModalCode" class="show-request-info-row2"></label>
+                    </div>
+                    <div>
+                        <div class="show-request-info-row"><b>Tên sản phẩm:</b></div>
+                        <label id="RequestInfoModalName" class="show-request-info-row2"></label>
+                    </div>
+                    <div>
+                        <div class="show-request-info-row"><b>Ngày bàn giao:</b></div>
+                        <label id="RequestInfoModalHandoverAt" class="show-request-info-row2"></label>
+                    </div>
+                    <div>
+                        <div class="show-request-info-row"><b>Ngày thu hồi:</b></div>
+                        <label id="RequestInfoModalReleasedAt" class="show-request-info-row2"></label>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
@@ -223,30 +197,57 @@
         });
     });
 </script>
-<script type="text/javascript">
-    $('.released-modal-click').click(function () {
-        $('#popup1Title').text('Thu hồi ' + $(this).data('main') + ': ' + $(this).data('content') + ' của nhân viên ' + $(this).data('title'));
-        $('#releasedForm').attr('action', '{{url('/devices/lists/released/')}}' + '/' + $(this).data('id'));
-        $('#releasedModal').modal('show');
-    })
-    $('.request-modal-click').click(function () {
-        $('#popup2Title').text('Yêu cầu #' + $(this).data('id'));
-        $('.showRequestInfoModalContent1').text('Nhân viên ' + $(this).data('title') + ' đã yêu cầu thiết bị. Lý do: ');
-        $('.showRequestInfoModalContent2').text($(this).data('content'));
-        $('#showRequestInfoModal').modal('show');
-    })
-</script>
 
-{{--Validate data when released--}}
-<script src="{{asset('public/backend/js/jquery-validation-1.19.2/dist/jquery.validate.js')}}"></script>
 <script type="text/javascript">
-    $().ready(function () {
-        $("#releasedForm").validate({
-            rules: {
-                releasedDay: "required"
+    // Show request info
+    $('.request-info-modal-click').click(function () {
+        $('#showRequestInfoModal').modal('show');
+        $.ajax({
+            type : 'get',
+            url : 'me/show-request-info/' + $(this).data('id'),
+            dataType : 'json',
+
+            success: function (response) {
+                console.log(response);
+                $('#popup1Title').text('Bàn giao ' + response["code"] + ' - ' + response["name"]);
+                switch (response["category"]) {
+                    case 1:
+                        $('#RequestInfoModalCategory').text('Screen');
+                        break;
+                    case 2:
+                        $('#RequestInfoModalCategory').text('Mouse');
+                        break;
+                    case 3:
+                        $('#RequestInfoModalCategory').text('Keyboard');
+                        break;
+                    case 4:
+                        $('#RequestInfoModalCategory').text('Case');
+                        break;
+                    case 5:
+                        $('#RequestInfoModalCategory').text('Phone');
+                        break;
+                    case 6:
+                        $('#RequestInfoModalCategory').text('Laptop');
+                        break;
+                    case 7:
+                        $('#RequestInfoModalCategory').text('Chair');
+                        break;
+                    case 8:
+                        $('#RequestInfoModalCategory').text('Table');
+                        break;
+                    case 9:
+                        $('#RequestInfoModalCategory').text('Hard Disk');
+                        break;
+                    default: break;
+                }
+                $('#RequestInfoModalCode').text(response["code"]);
+                $('#RequestInfoModalName').text(response["name"]);
+                $('#RequestInfoModalHandoverAt').text(response["handover_at"]);
+                $('#RequestInfoModalReleasedAt').text(response["released_at"]);
             }
-        });
+        })
     });
 </script>
+
 </body>
 </html>
